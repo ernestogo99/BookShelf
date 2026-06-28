@@ -33,19 +33,24 @@ def _row_to_schema(book: Book, user_reading: Reading | None = None) -> BookDetai
     )
 
 
+_OL_HEADERS = {"User-Agent": "BookShelf/1.0 (app mobile de registro de leituras)"}
+
+
 def _ol_call(query: str, extra_params: dict) -> list[dict]:
     try:
         resp = httpx.get(
             "https://openlibrary.org/search.json",
             params={
-                "q": query,
+                # "title" busca apenas no campo título — evita que números como "1984"
+                # sejam interpretados como ano de publicação pelo full-text search (q=).
+                "title": query,
                 "limit": 15,
-                # editions = nº de edições é o melhor proxy para "livro mais conhecido"
                 "sort": "editions",
-                "fields": "key,title,author_name,publisher,first_publish_year,"
-                "number_of_pages_median,cover_i,subject",
+                "fields": "key,title,alternative_titles,author_name,publisher,"
+                "first_publish_year,number_of_pages_median,cover_i,subject",
                 **extra_params,
             },
+            headers=_OL_HEADERS,
             timeout=10,
         )
         resp.raise_for_status()
@@ -54,19 +59,41 @@ def _ol_call(query: str, extra_params: dict) -> list[dict]:
         return []
 
 
-def _doc_to_item(doc: dict) -> dict | None:
+def _title_score(title: str, query: str) -> int:
+    t, q = title.lower().strip(), query.lower().strip()
+    if t == q:
+        return 4
+    if t.startswith(q):
+        return 3
+    if q in t:
+        return 2
+    return 0
+
+
+def _best_title(canonical: str, alternatives: list[str], query: str) -> str:
+    """Returns whichever title (canonical or alternative) best matches the query."""
+    best, best_score = canonical, _title_score(canonical, query)
+    for alt in alternatives:
+        score = _title_score(alt, query)
+        if score > best_score:
+            best, best_score = alt, score
+    return best
+
+
+def _doc_to_item(doc: dict, query: str = "") -> dict | None:
     ol_key = doc.get("key")
     if not ol_key:
         return None
     cover_i = doc.get("cover_i")
+    canonical = doc.get("title", "")
+    alternatives = doc.get("alternative_titles") or []
     return {
         "ol_key": ol_key,
-        "title": doc.get("title", ""),
+        "title": _best_title(canonical, alternatives, query),
         "authors": doc.get("author_name", []),
         "publisher": (doc.get("publisher") or [None])[0],
         "published_year": doc.get("first_publish_year"),
         "pages": doc.get("number_of_pages_median"),
-        # -L.jpg = imagem grande (800px); -M = média (180px)
         "cover_url": f"https://covers.openlibrary.org/b/id/{cover_i}-L.jpg" if cover_i else None,
         "genres": (doc.get("subject") or [])[:5],
     }
@@ -87,12 +114,15 @@ def _fetch_from_open_library(query: str) -> list[dict]:
         if not work_key or work_key in seen_keys:
             continue
         seen_keys.add(work_key)
-        item = _doc_to_item(doc)
+        item = _doc_to_item(doc, query)
         if item:
             results.append(item)
         if len(results) >= 10:
             break
 
+    # Garante que livros cujo título casa melhor com a query aparecem primeiro.
+    # O sort é estável: empates mantêm a ordem original (pt primeiro, por editions).
+    results.sort(key=lambda x: _title_score(x["title"], query), reverse=True)
     return results
 
 
