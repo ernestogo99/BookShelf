@@ -104,7 +104,10 @@ def get_year_summary(db: Session, user_id: uuid.UUID, year: int) -> dict:
         "favorite_book": {
             "id": str(favorite_book.id),
             "title": favorite_book.title,
-            "cover_url": favorite_book.cover_url,
+            "cover_url": (favorite_book.cover_url or "")
+            .replace("-S.jpg", "-L.jpg")
+            .replace("-M.jpg", "-L.jpg")
+            or None,
         }
         if favorite_book
         else None,

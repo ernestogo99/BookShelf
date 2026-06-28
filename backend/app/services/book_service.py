@@ -33,35 +33,66 @@ def _row_to_schema(book: Book, user_reading: Reading | None = None) -> BookDetai
     )
 
 
-def _fetch_from_open_library(query: str) -> list[dict]:
+def _ol_call(query: str, extra_params: dict) -> list[dict]:
     try:
         resp = httpx.get(
             "https://openlibrary.org/search.json",
-            params={"q": query, "limit": 10},
+            params={
+                "q": query,
+                "limit": 15,
+                # editions = nº de edições é o melhor proxy para "livro mais conhecido"
+                "sort": "editions",
+                "fields": "key,title,author_name,publisher,first_publish_year,"
+                "number_of_pages_median,cover_i,subject",
+                **extra_params,
+            },
             timeout=10,
         )
         resp.raise_for_status()
-        data = resp.json()
+        return resp.json().get("docs", [])
     except Exception:
         return []
 
+
+def _doc_to_item(doc: dict) -> dict | None:
+    ol_key = doc.get("key")
+    if not ol_key:
+        return None
+    cover_i = doc.get("cover_i")
+    return {
+        "ol_key": ol_key,
+        "title": doc.get("title", ""),
+        "authors": doc.get("author_name", []),
+        "publisher": (doc.get("publisher") or [None])[0],
+        "published_year": doc.get("first_publish_year"),
+        "pages": doc.get("number_of_pages_median"),
+        # -L.jpg = imagem grande (800px); -M = média (180px)
+        "cover_url": f"https://covers.openlibrary.org/b/id/{cover_i}-L.jpg" if cover_i else None,
+        "genres": (doc.get("subject") or [])[:5],
+    }
+
+
+def _fetch_from_open_library(query: str) -> list[dict]:
+    # Busca 1: resultados em português (prioridade)
+    pt_docs = _ol_call(query, {"language": "por"})
+    # Busca 2: busca geral para cobrir títulos sem edição em pt
+    all_docs = _ol_call(query, {})
+
+    # Deduplica por work key — evita múltiplas edições do mesmo livro.
+    # Resultados pt vêm primeiro, então a versão portuguesa tem prioridade.
+    seen_keys: set[str] = set()
     results = []
-    for doc in data.get("docs", []):
-        cover_i = doc.get("cover_i")
-        results.append(
-            {
-                "ol_key": doc.get("key"),
-                "title": doc.get("title", ""),
-                "authors": doc.get("author_name", []),
-                "publisher": (doc.get("publisher") or [None])[0],
-                "published_year": doc.get("first_publish_year"),
-                "pages": doc.get("number_of_pages_median"),
-                "cover_url": f"https://covers.openlibrary.org/b/id/{cover_i}-M.jpg"
-                if cover_i
-                else None,
-                "genres": doc.get("subject", [])[:5] if doc.get("subject") else [],
-            }
-        )
+    for doc in pt_docs + all_docs:
+        work_key = doc.get("key")
+        if not work_key or work_key in seen_keys:
+            continue
+        seen_keys.add(work_key)
+        item = _doc_to_item(doc)
+        if item:
+            results.append(item)
+        if len(results) >= 10:
+            break
+
     return results
 
 

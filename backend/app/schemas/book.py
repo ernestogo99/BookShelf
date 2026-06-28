@@ -1,6 +1,6 @@
 import uuid
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 
 class BookResponse(BaseModel):
@@ -18,6 +18,13 @@ class BookResponse(BaseModel):
     genres: list[str] | None
     avg_rating: float
     total_ratings: int
+
+    @field_validator("cover_url", mode="before")
+    @classmethod
+    def upgrade_cover_size(cls, v: object) -> object:
+        if isinstance(v, str):
+            return v.replace("-S.jpg", "-L.jpg").replace("-M.jpg", "-L.jpg")
+        return v
 
 
 class BookDetailResponse(BookResponse):

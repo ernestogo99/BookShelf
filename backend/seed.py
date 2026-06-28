@@ -64,7 +64,7 @@ BOOKS = [
             "único lugar no universo onde é encontrada a especiaria, a substância mais valiosa "
             "da galáxia. Uma épica jornada de traição, sobrevivência e profecia."
         ),
-        "cover_url": "https://covers.openlibrary.org/b/id/8231480-M.jpg",
+        "cover_url": "https://covers.openlibrary.org/b/id/8231480-L.jpg",
         "genres": ["Ficção Científica", "Aventura", "Épico"],
     },
     {
@@ -79,7 +79,7 @@ BOOKS = [
             "se trata do Um Anel criado pelo Senhor das Trevas Sauron. Uma grande jornada "
             "tem início para destruí-lo nas chamas da Montanha da Perdição."
         ),
-        "cover_url": "https://covers.openlibrary.org/b/id/8406786-M.jpg",
+        "cover_url": "https://covers.openlibrary.org/b/id/8406786-L.jpg",
         "genres": ["Fantasia", "Aventura", "Épico"],
     },
     {
@@ -94,7 +94,7 @@ BOOKS = [
             "liderado pelo misterioso Grande Irmão. Uma história sobre vigilância, controle "
             "e a resistência do espírito humano."
         ),
-        "cover_url": "https://covers.openlibrary.org/b/id/8575708-M.jpg",
+        "cover_url": "https://covers.openlibrary.org/b/id/8575708-L.jpg",
         "genres": ["Distopia", "Ficção Científica", "Clássico"],
     },
     {
@@ -108,7 +108,7 @@ BOOKS = [
             "A saga da família Buendía ao longo de sete gerações na cidade fictícia de Macondo, "
             "obra-prima do realismo mágico latino-americano."
         ),
-        "cover_url": "https://covers.openlibrary.org/b/id/8231476-M.jpg",
+        "cover_url": "https://covers.openlibrary.org/b/id/8231476-L.jpg",
         "genres": ["Realismo Mágico", "Clássico", "Literatura Latino-Americana"],
     },
     {
@@ -122,7 +122,7 @@ BOOKS = [
             "Uma narrativa abrangente da história da espécie humana, desde a pré-história "
             "até o presente, explorando como o Homo Sapiens dominou o planeta."
         ),
-        "cover_url": "https://covers.openlibrary.org/b/id/8739161-M.jpg",
+        "cover_url": "https://covers.openlibrary.org/b/id/8739161-L.jpg",
         "genres": ["Não-Ficção", "História", "Ciência"],
     },
     {
@@ -137,7 +137,7 @@ BOOKS = [
             "Felizmente seu amigo Ford Prefect é um alien que trabalha para o Guia do Mochileiro "
             "das Galáxias, e os dois escapam pela galáxia afora."
         ),
-        "cover_url": "https://covers.openlibrary.org/b/id/8302039-M.jpg",
+        "cover_url": "https://covers.openlibrary.org/b/id/8302039-L.jpg",
         "genres": ["Ficção Científica", "Comédia", "Aventura"],
     },
     {
@@ -151,7 +151,7 @@ BOOKS = [
             "Em uma fazenda, os animais se rebelam contra seus donos humanos sob a liderança "
             "dos porcos. Uma fábula política sobre poder, corrupção e igualdade."
         ),
-        "cover_url": "https://covers.openlibrary.org/b/id/8314866-M.jpg",
+        "cover_url": "https://covers.openlibrary.org/b/id/8314866-L.jpg",
         "genres": ["Clássico", "Sátira Política", "Fábula"],
     },
     {
@@ -165,7 +165,7 @@ BOOKS = [
             "Bentinho, narrador não-confiável, conta sua história de amor com Capitu e a "
             "suspeita de traição que o consumiu. Um dos maiores romances da literatura brasileira."
         ),
-        "cover_url": "https://covers.openlibrary.org/b/id/8371476-M.jpg",
+        "cover_url": "https://covers.openlibrary.org/b/id/8371476-L.jpg",
         "genres": ["Clássico", "Literatura Brasileira", "Romance"],
     },
 ]
