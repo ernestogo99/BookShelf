@@ -41,3 +41,13 @@ npm install
 ```
 npm run start
 ```
+
+Antes de implementar qualquer tela, eu faria primeiro toda a base reutilizável, nesta ordem:
+
+✅ Definir tema (colors, spacing, typography).
+✅ Criar os componentes de UI (Button, Input, PasswordInput, Screen, Loading).
+✅ Configurar React Hook Form + Zod.
+✅ Criar authStorage.
+✅ Criar useAuth.
+✅ Implementar LoginScreen.
+✅ Implementar RegisterScreen.
