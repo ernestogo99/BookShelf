@@ -21,7 +21,7 @@ export interface BaseInputProps<T extends FieldValues> extends Omit<
 
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
-
+  onRightIconPress?: () => void;
   keyboardType?: KeyboardTypeOptions;
 
   returnKeyType?: ReturnKeyTypeOptions;

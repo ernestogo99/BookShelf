@@ -10,6 +10,7 @@ import { ILoginInput, IUserCreate, IUserResponse } from "../interfaces";
 
 import { authService } from "../services/authservice";
 import { authStorage } from "../utils";
+import { userService } from "../services/userService";
 
 interface AuthContextData {
   user: IUserResponse | null;
@@ -64,6 +65,15 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
     await authStorage.saveToken(response.access_token);
 
+    const me = await userService.getMe();
+
+    if (me instanceof Error) {
+      return me;
+    }
+
+    await authStorage.saveUser(me);
+
+    setUser(me);
     setToken(response.access_token);
 
     return;

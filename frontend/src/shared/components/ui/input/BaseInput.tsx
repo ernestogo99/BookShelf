@@ -1,5 +1,5 @@
 import { Controller, FieldValues } from "react-hook-form";
-import { Text, TextInput, View } from "react-native";
+import { Pressable, Text, TextInput, View } from "react-native";
 
 import { styles } from "./styles";
 import { colors } from "../../../theme";
@@ -20,6 +20,7 @@ export function BaseInput<T extends FieldValues>({
   rightIcon,
   style,
   multiline,
+  onRightIconPress,
   ...rest
 }: BaseInputProps<T>) {
   return (
@@ -52,7 +53,11 @@ export function BaseInput<T extends FieldValues>({
               {...rest}
             />
 
-            {rightIcon}
+            {rightIcon && (
+              <Pressable onPress={onRightIconPress} hitSlop={10}>
+                {rightIcon}
+              </Pressable>
+            )}
           </View>
 
           {fieldState.error && (
