@@ -11,6 +11,7 @@ import { ILoginInput, IUserCreate, IUserResponse } from "../interfaces";
 import { authService } from "../services/authservice";
 import { authStorage } from "../utils";
 import { userService } from "../services/userService";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface AuthContextData {
   user: IUserResponse | null;

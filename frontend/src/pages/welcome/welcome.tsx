@@ -3,8 +3,9 @@ import { useNavigation } from "@react-navigation/native";
 import { styles } from "./styles";
 import LoginImage from "../../../assets/images/login_selection.jpg";
 import logo from "../../../assets/svgs/BookShelfLogo.png";
+import { AuthNavigation } from "../../routes/types";
 export function WelcomeScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<AuthNavigation>();
 
   return (
     <ImageBackground
@@ -24,14 +25,14 @@ export function WelcomeScreen() {
         <View style={styles.buttons}>
           <Pressable
             style={[styles.button, styles.secondaryButton]}
-            onPress={() => navigation.navigate("Register" as never)}
+            onPress={() => navigation.navigate("Register")}
           >
             <Text style={styles.secondaryText}>Join bookshelf</Text>
           </Pressable>
 
           <Pressable
             style={[styles.button, styles.primaryButton]}
-            onPress={() => navigation.navigate("Login" as never)}
+            onPress={() => navigation.navigate("Login")}
           >
             <Text style={styles.primaryText}>Sign in</Text>
           </Pressable>

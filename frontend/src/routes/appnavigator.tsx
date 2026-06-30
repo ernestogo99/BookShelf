@@ -1,9 +1,19 @@
-import { View, Text } from "react-native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
-export const AppNavigator = () => {
+import { RootStackParamList } from "./types";
+import { Home } from "../pages";
+
+const Stack = createNativeStackNavigator<RootStackParamList>();
+
+export function AppNavigator() {
   return (
-    <View>
-      <Text>AppNavigator</Text>
-    </View>
+    <Stack.Navigator
+      initialRouteName="Home"
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
+      <Stack.Screen name="Home" component={Home} />
+    </Stack.Navigator>
   );
-};
+}

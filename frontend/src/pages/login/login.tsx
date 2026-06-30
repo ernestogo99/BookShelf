@@ -20,9 +20,10 @@ import { styles } from "./styles";
 import LoginImage from "../../../assets/images/sign_in.png";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../shared/contexts/authcontext";
+import { AuthNavigation } from "../../routes/types";
 
 export function Login() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<AuthNavigation>();
 
   const [showPassword, setShowPassword] = useState(false);
 
@@ -103,7 +104,7 @@ export function Login() {
         <View style={styles.footer}>
           <Text style={styles.footerText}>Don't have an account ?</Text>
 
-          <Pressable onPress={() => navigation.navigate("Register" as never)}>
+          <Pressable onPress={() => navigation.navigate("Register")}>
             <Text style={styles.signUp}> Sign Up</Text>
           </Pressable>
         </View>
