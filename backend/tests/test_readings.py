@@ -48,7 +48,7 @@ def test_delete_recalculates_cache(auth_client, book_id):
 def test_delete_other_user_forbidden(client, book_id):
     resp_a = client.post(
         "/auth/register",
-        json={"username": "ruser_a", "email": "ra@example.com", "password": "pass", "name": "A"},
+        json={"username": "ruser_a", "email": "ra@example.com", "password": "pass123", "name": "A"},
     )
     token_a = resp_a.json()["access_token"]
     client.headers.update({"Authorization": f"Bearer {token_a}"})
@@ -57,7 +57,7 @@ def test_delete_other_user_forbidden(client, book_id):
 
     resp_b = client.post(
         "/auth/register",
-        json={"username": "ruser_b", "email": "rb@example.com", "password": "pass", "name": "B"},
+        json={"username": "ruser_b", "email": "rb@example.com", "password": "pass123", "name": "B"},
     )
     token_b = resp_b.json()["access_token"]
     client.headers.update({"Authorization": f"Bearer {token_b}"})

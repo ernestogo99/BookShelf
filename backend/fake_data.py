@@ -16,12 +16,12 @@ from faker import Faker
 from passlib.context import CryptContext
 from sqlalchemy.dialects.postgresql import insert
 
-from app.database import SessionLocal
-from app.models.book import Book
-from app.models.list_ import List, ListBook
-from app.models.reading import Reading
-from app.models.review import Review
-from app.models.user import User
+from backend.app.database import SessionLocal
+from backend.app.models.book import Book
+from backend.app.models.list_ import List, ListBook
+from backend.app.models.reading import Reading
+from backend.app.models.review import Review
+from backend.app.models.user import User
 
 fake = Faker("pt_BR")
 Faker.seed(42)
@@ -94,7 +94,10 @@ def clean(db) -> None:
 def run(n_users: int, db) -> None:
     books = db.query(Book.id).all()
     if not books:
-        print("Erro: nenhum livro no banco. Importe livros antes de gerar dados falsos.", file=sys.stderr)
+        print(
+            "Erro: nenhum livro no banco. Importe livros antes de gerar dados falsos.",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
     book_ids = [row[0] for row in books]
@@ -130,13 +133,15 @@ def run(n_users: int, db) -> None:
         for book_id in chosen_books:
             status = random.choice(STATUSES)
             rating = random.randint(3, 5) if status == "read" else None
-            readings.append({
-                "id": uuid.uuid4(),
-                "user_id": user.id,
-                "book_id": book_id,
-                "status": status,
-                "rating": rating,
-            })
+            readings.append(
+                {
+                    "id": uuid.uuid4(),
+                    "user_id": user.id,
+                    "book_id": book_id,
+                    "status": status,
+                    "rating": rating,
+                }
+            )
             if status == "read":
                 read_book_ids.append((book_id, rating))
 
@@ -151,13 +156,15 @@ def run(n_users: int, db) -> None:
         reviews = []
         for book_id, rating in read_book_ids:
             if random.random() < 0.6:
-                reviews.append({
-                    "id": uuid.uuid4(),
-                    "user_id": user.id,
-                    "book_id": book_id,
-                    "content": random.choice(REVIEW_TEMPLATES),
-                    "has_spoiler": random.random() < 0.1,
-                })
+                reviews.append(
+                    {
+                        "id": uuid.uuid4(),
+                        "user_id": user.id,
+                        "book_id": book_id,
+                        "content": random.choice(REVIEW_TEMPLATES),
+                        "has_spoiler": random.random() < 0.1,
+                    }
+                )
 
         if reviews:
             db.execute(
@@ -188,15 +195,19 @@ def run(n_users: int, db) -> None:
                 db.add(ListBook(list_id=lst.id, book_id=book_id, position=pos))
 
         db.commit()
-        print(f"  [{i+1}/{n_users}] {name} — {n_readings} leituras, {len(reviews)} resenhas")
+        print(f"  [{i + 1}/{n_users}] {name} — {n_readings} leituras, {len(reviews)} resenhas")
 
     print(f"\nConcluído. {n_users} usuários criados. Senha de todos: senha123")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Gera usuários falsos com dados relacionados.")
-    parser.add_argument("--users", type=int, default=15, metavar="N", help="Nº de usuários (padrão: 15)")
-    parser.add_argument("--clean", action="store_true", help="Remove usuários falsos antes de criar")
+    parser.add_argument(
+        "--users", type=int, default=15, metavar="N", help="Nº de usuários (padrão: 15)"
+    )
+    parser.add_argument(
+        "--clean", action="store_true", help="Remove usuários falsos antes de criar"
+    )
     args = parser.parse_args()
 
     db = SessionLocal()

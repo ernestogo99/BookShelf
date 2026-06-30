@@ -5,9 +5,9 @@ from sqlalchemy import func, select, text
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session, joinedload
 
-from app.models.book import Book
-from app.models.reading import Reading
-from app.schemas.reading import ReadingCreate, ReadingResponse
+from backend.app.models.book import Book
+from backend.app.models.reading import Reading
+from backend.app.schemas.reading import ReadingCreate, ReadingResponse
 
 
 def _update_book_rating_cache(db: Session, book_id: uuid.UUID) -> None:
@@ -28,6 +28,9 @@ def upsert(db: Session, user_id: uuid.UUID, data: ReadingCreate) -> ReadingRespo
     if not book:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Livro não encontrado")
 
+    # A nota só faz sentido para livros lidos; descarta-a nos demais status.
+    rating = data.rating if data.status == "read" else None
+
     stmt = (
         insert(Reading)
         .values(
@@ -35,11 +38,11 @@ def upsert(db: Session, user_id: uuid.UUID, data: ReadingCreate) -> ReadingRespo
             user_id=user_id,
             book_id=data.book_id,
             status=data.status,
-            rating=data.rating,
+            rating=rating,
         )
         .on_conflict_do_update(
             index_elements=["user_id", "book_id"],
-            set_={"status": data.status, "rating": data.rating, "updated_at": text("now()")},
+            set_={"status": data.status, "rating": rating, "updated_at": text("now()")},
         )
         .returning(Reading.id)
     )

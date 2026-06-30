@@ -1,22 +1,40 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
-from app.database import get_db
-from app.dependencies import get_current_user
-from app.models.user import User
-from app.schemas.common import PaginatedResponse
-from app.schemas.list_ import ListResponse
-from app.schemas.reading import ReadingResponse
-from app.schemas.review import ReviewResponse
-from app.schemas.user import UserResponse, UserStatsResponse, UserUpdateInput
-from app.services import list_service, reading_service, review_service, stats_service, user_service
+from backend.app.database import get_db
+from backend.app.dependencies import get_current_user
+from backend.app.models.user import User
+from backend.app.schemas.common import PaginatedResponse
+from backend.app.schemas.list_ import ListResponse
+from backend.app.schemas.reading import ReadingResponse
+from backend.app.schemas.review import ReviewResponse
+from backend.app.schemas.user import (
+    UserProfileResponse,
+    UserResponse,
+    UserStatsResponse,
+    UserUpdateInput,
+)
+from backend.app.services import user_service
+from backend.app.services import list_service, reading_service, review_service, stats_service
 
 router = APIRouter()
 
 
-@router.get("/", response_model=UserResponse)
-def get_me(current_user: User = Depends(get_current_user)):
-    return current_user
+@router.get("/", response_model=UserProfileResponse)
+def get_me(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    counts = stats_service.get_profile_counts(db, current_user.id)
+    return UserProfileResponse(
+        id=current_user.id,
+        username=current_user.username,
+        email=current_user.email,
+        name=current_user.name,
+        bio=current_user.bio,
+        avatar_url=current_user.avatar_url,
+        **counts,
+    )
 
 
 @router.patch("/", response_model=UserResponse)

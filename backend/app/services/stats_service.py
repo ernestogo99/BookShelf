@@ -2,13 +2,29 @@ import uuid
 from collections import Counter, defaultdict
 
 from fastapi import HTTPException, status
-from sqlalchemy import cast, extract
+from sqlalchemy import cast, extract, func
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 from sqlalchemy.orm import Session, joinedload
 
-from app.models.book import Book
-from app.models.reading import Reading
-from app.schemas.user import UserStatsResponse
+from backend.app.models.book import Book
+from backend.app.models.reading import Reading
+from backend.app.schemas.user import UserStatsResponse
+
+
+def get_profile_counts(db: Session, user_id: uuid.UUID) -> dict[str, int]:
+    """Contadores de leitura por status para a tela de perfil."""
+    rows = (
+        db.query(Reading.status, func.count())
+        .filter(Reading.user_id == user_id)
+        .group_by(Reading.status)
+        .all()
+    )
+    counts = dict(rows)
+    return {
+        "total_read": counts.get("read", 0),
+        "total_reading": counts.get("reading", 0),
+        "total_want_to_read": counts.get("want_to_read", 0),
+    }
 
 
 def get_user_stats(db: Session, user_id: uuid.UUID) -> UserStatsResponse:

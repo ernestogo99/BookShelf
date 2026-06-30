@@ -4,9 +4,15 @@ from fastapi import HTTPException, status
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.models.book import Book
-from app.models.list_ import List, ListBook
-from app.schemas.list_ import AddBookInput, ListCreate, ListResponse, ListUpdate, ReorderInput
+from backend.app.models.book import Book
+from backend.app.models.list_ import List, ListBook
+from backend.app.schemas.list_ import (
+    AddBookInput,
+    ListCreate,
+    ListResponse,
+    ListUpdate,
+    ReorderInput,
+)
 
 
 def _to_response(lst: List) -> ListResponse:
@@ -80,7 +86,9 @@ def add_book(
     if existing:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Livro já está na lista")
 
-    max_pos = db.query(func.max(ListBook.position)).filter(ListBook.list_id == list_id).scalar() or 0
+    max_pos = (
+        db.query(func.max(ListBook.position)).filter(ListBook.list_id == list_id).scalar() or 0
+    )
     lb = ListBook(list_id=list_id, book_id=data.book_id, position=max_pos + 1)
     db.add(lb)
     db.commit()

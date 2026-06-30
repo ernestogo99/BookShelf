@@ -29,7 +29,7 @@ def test_duplicate_review_returns_409(auth_client, book_id):
 def test_update_other_user_review_forbidden(client, book_id):
     resp_a = client.post(
         "/auth/register",
-        json={"username": "rev_a", "email": "reva@example.com", "password": "pass", "name": "A"},
+        json={"username": "rev_a", "email": "reva@example.com", "password": "pass123", "name": "A"},
     )
     token_a = resp_a.json()["access_token"]
     client.headers.update({"Authorization": f"Bearer {token_a}"})
@@ -42,7 +42,7 @@ def test_update_other_user_review_forbidden(client, book_id):
 
     resp_b = client.post(
         "/auth/register",
-        json={"username": "rev_b", "email": "revb@example.com", "password": "pass", "name": "B"},
+        json={"username": "rev_b", "email": "revb@example.com", "password": "pass123", "name": "B"},
     )
     token_b = resp_b.json()["access_token"]
     client.headers.update({"Authorization": f"Bearer {token_b}"})

@@ -12,8 +12,8 @@ import sys
 
 from sqlalchemy.dialects.postgresql import insert
 
-from app.database import SessionLocal
-from app.models.book import Book
+from backend.app.database import SessionLocal
+from backend.app.models.book import Book
 
 
 def _map(item: dict) -> dict | None:
@@ -82,11 +82,7 @@ def run(file_path: str, batch_size: int) -> None:
         inserted = 0
         for i in range(0, len(rows), batch_size):
             batch = rows[i : i + batch_size]
-            stmt = (
-                insert(Book)
-                .values(batch)
-                .on_conflict_do_nothing(index_elements=["ol_key"])
-            )
+            stmt = insert(Book).values(batch).on_conflict_do_nothing(index_elements=["ol_key"])
             result = db.execute(stmt)
             db.commit()
             inserted += result.rowcount
@@ -101,7 +97,8 @@ def run(file_path: str, batch_size: int) -> None:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Importa livros do Skoob JSON para o banco.")
     parser.add_argument("file", help="Caminho para o arquivo JSON")
-    parser.add_argument("--batch-size", type=int, default=500, metavar="N",
-                        help="Livros por lote (padrão: 500)")
+    parser.add_argument(
+        "--batch-size", type=int, default=500, metavar="N", help="Livros por lote (padrão: 500)"
+    )
     args = parser.parse_args()
     run(args.file, args.batch_size)

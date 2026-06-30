@@ -3,20 +3,21 @@ import uuid
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
-from app.database import get_db
-from app.dependencies import get_optional_current_user
-from app.models.user import User
-from app.schemas.book import BookDetailResponse
-from app.schemas.common import PaginatedResponse
-from app.schemas.review import ReviewResponse
-from app.services import book_service, review_service
+from backend.app.database import get_db
+from backend.app.dependencies import get_optional_current_user
+from backend.app.models.user import User
+from backend.app.schemas.book import BookDetailResponse
+from backend.app.schemas.common import PaginatedResponse
+from backend.app.schemas.review import ReviewResponse
+from backend.app.services import review_service
+from backend.app.services import book_service
 
 router = APIRouter()
 
 
 @router.get("/search", response_model=list[BookDetailResponse])
 def search_books(
-    q: str = Query(..., min_length=1),
+    q: str | None = Query(default=None, min_length=1),
     db: Session = Depends(get_db),
     current_user: User | None = Depends(get_optional_current_user),
 ):

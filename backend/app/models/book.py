@@ -4,7 +4,7 @@ from sqlalchemy import ARRAY, Integer, Numeric, String, Text, func
 from sqlalchemy.dialects.postgresql import TSVECTOR, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.database import Base
+from backend.app.database import Base
 
 
 class Book(Base):

@@ -1,18 +1,18 @@
 import uuid
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
-from app.schemas.user import UserResponse
+from backend.app.schemas.user import UserResponse
 
 
 class ReviewCreate(BaseModel):
     book_id: uuid.UUID
-    content: str
+    content: str = Field(min_length=1, max_length=2000)
     has_spoiler: bool = False
 
 
 class ReviewUpdate(BaseModel):
-    content: str | None = None
+    content: str | None = Field(default=None, min_length=1, max_length=2000)
     has_spoiler: bool | None = None
 
 

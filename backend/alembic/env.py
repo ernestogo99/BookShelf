@@ -5,9 +5,9 @@ from sqlalchemy import pool
 
 from alembic import context
 
-from app.config import settings
-from app.database import Base
-import app.models  # noqa: F401 — ensure all models are registered
+from backend.app.config import settings
+from backend.app.database import Base
+import backend.app.models  # noqa: F401 — ensure all models are registered
 
 config = context.config
 
@@ -62,9 +62,7 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()

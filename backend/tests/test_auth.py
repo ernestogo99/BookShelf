@@ -10,7 +10,7 @@ def test_register_success(client):
 
 
 def test_register_duplicate_email(client):
-    payload = {"username": "user1", "email": "dup@example.com", "password": "pass", "name": "User"}
+    payload = {"username": "user1", "email": "dup@example.com", "password": "pass123", "name": "User"}
     client.post("/auth/register", json=payload)
     payload["username"] = "user2"
     resp = client.post("/auth/register", json=payload)

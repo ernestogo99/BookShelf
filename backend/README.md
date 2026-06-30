@@ -304,14 +304,19 @@ uv run pytest tests/test_auth.py -v
 │  ┌──────────┐   ┌──────────┐   ┌─────────────────┐  │
 │  │ Routers  │──▶│ Services │──▶│     Models      │  │
 │  │          │   │          │   │  (SQLAlchemy)   │  │
-│  └──────────┘   └──────────┘   └────────┬────────┘  │
-│                                         │            │
-│                      ┌──────────────────┘            │
-│                      ▼                               │
-│             ┌────────────────┐                       │
-│             │  PostgreSQL 15 │                       │
-│             └────────────────┘                       │
-└─────────────────────────────────────────────────────┘
+│  └──────────┘   └────┬─────┘   └────────┬────────┘  │
+│                      │                  │            │
+│                      │   ┌──────────────┘            │
+│                      │   ▼                           │
+│                      │ ┌────────────────┐            │
+│                      │ │  PostgreSQL 15 │            │
+│                      │ └────────────────┘            │
+└──────────────────────┼──────────────────────────────┘
+                       │ HTTP (fallback de busca)
+                       ▼
+              ┌────────────────────┐
+              │  Open Library API  │
+              └────────────────────┘
 ```
 
 ### Estrutura de pastas
@@ -351,7 +356,8 @@ backend/
 │   │
 │   └── services/            # Lógica de negócio — única fonte de verdade
 │       ├── auth_service.py
-│       ├── book_service.py  # Busca full-text + trigram no banco local
+│       ├── book_service.py  # Busca por prefixo + trigram, aciona fallback OL
+│       ├── openlibrary.py   # Fallback de catálogo via Open Library API
 │       ├── reading_service.py
 │       ├── review_service.py
 │       ├── list_service.py
@@ -419,13 +425,36 @@ Endpoints de leitura pública (`GET /books/search`, `GET /books/{id}`, `GET /boo
 ```
 GET /books/search?q=<query>
     │
-    ├── Full-text search: search_vector @@ plainto_tsquery('portuguese', query)
-    ├── Fallback:         title ILIKE '%query%'  (acelerado por índice GIN trigram)
-    ├── Ordenação:        similarity(title, query) + ts_rank
-    └── Dedup:            remove edições duplicadas da mesma obra
+    ├── Prefixo:    search_vector @@ to_tsquery('portuguese', 'harr:* & pott:*')
+    │               casa palavras parciais em título, autores e sinopse — essencial
+    │               para a busca em tempo real enquanto o usuário digita
+    ├── Typo:       word_similarity(query, title) ≥ 0.5  (trigram, índice GIN)
+    ├── Ordenação:  ts_rank + word_similarity, desempate por total_ratings
+    ├── Dedup:      remove edições duplicadas da mesma obra
+    └── Fallback:   se o catálogo local não cobrir, consulta a Open Library,
+                    persiste os resultados e os devolve (ver abaixo)
 ```
 
 O campo `search_vector` é um `tsvector` com stemming em português mantido por trigger automático — atualiza sempre que `title`, `authors` ou `synopsis` mudam.
+
+A busca por prefixo (`:*`) tokeniza a query apenas em caracteres de palavra, evitando erros de sintaxe do `to_tsquery` com caracteres especiais.
+
+### Fallback Open Library
+
+O catálogo local (importado do Skoob) cobre a maioria das buscas. Quando ele **não retorna nenhum resultado** e a query tem ao menos 3 caracteres, o backend consulta a [Open Library](https://openlibrary.org/developers/api) como fonte complementar:
+
+```
+busca local vazia + len(query) ≥ 3
+    │
+    ▼
+GET https://openlibrary.org/search.json?q=<query>
+    │
+    ├── mapeia docs → modelo Book (capa em -L.jpg, autores, ano, páginas, gêneros)
+    ├── persiste (idempotente por ol_key, ex.: "/works/OL82563W")
+    └── devolve já com UUID e search_vector preenchidos pelo trigger
+```
+
+A partir daí o livro passa a fazer parte do catálogo local e buscas futuras o encontram sem nova chamada externa. Falhas de rede ou timeout degradam de forma silenciosa (a busca apenas retorna vazio). Controlado por `OPENLIBRARY_ENABLED` e `OPENLIBRARY_TIMEOUT`.
 
 ### Cache de avaliações
 
@@ -490,7 +519,7 @@ list_books
 | Índice | Tipo | Finalidade |
 |--------|------|-----------|
 | `ix_books_search_vector` | GIN (tsvector) | Full-text search com stemming |
-| `ix_books_title_trgm` | GIN trigram | `ILIKE` rápido em títulos |
+| `ix_books_title_trgm` | GIN trigram | Busca por similaridade/typo em títulos (`word_similarity`) |
 | `ix_books_authors` | GIN array | Filtro por autor |
 | `ix_books_avg_rating` | B-tree | Ordenação em top-rated |
 | `ix_reviews_book_id` | B-tree | Reviews por livro |
@@ -510,7 +539,7 @@ list_books
 ### Usuário
 | Método | Path | Auth | Descrição |
 |--------|------|------|-----------|
-| GET | `/users/` | ✓ | Dados do usuário logado |
+| GET | `/users/` | ✓ | Dados do usuário logado + contadores (lido/lendo/quero ler) |
 | PATCH | `/users/` | ✓ | Atualiza nome, bio ou avatar |
 | GET | `/users/stats` | ✓ | Estatísticas de leitura |
 | GET | `/users/readings` | ✓ | Leituras com filtro `?status=` |
@@ -520,7 +549,7 @@ list_books
 ### Livros
 | Método | Path | Auth | Descrição |
 |--------|------|------|-----------|
-| GET | `/books/search?q=` | Opcional | Busca full-text no catálogo local |
+| GET | `/books/search?q=` | Opcional | Busca por prefixo/typo no catálogo local, com fallback Open Library |
 | GET | `/books/{id}` | Opcional | Detalhe com `my_reading` |
 | GET | `/books/{id}/reviews` | — | Resenhas de todos os usuários |
 

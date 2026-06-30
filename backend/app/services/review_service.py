@@ -4,8 +4,8 @@ from fastapi import HTTPException, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
-from app.models.review import Review
-from app.schemas.review import ReviewCreate, ReviewResponse, ReviewUpdate
+from backend.app.models.review import Review
+from backend.app.schemas.review import ReviewCreate, ReviewResponse, ReviewUpdate
 
 
 def _to_response(review: Review) -> ReviewResponse:

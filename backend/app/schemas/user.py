@@ -1,13 +1,13 @@
 import uuid
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 
 class UserCreate(BaseModel):
-    username: str
+    username: str = Field(min_length=3, max_length=50)
     email: EmailStr
-    password: str
-    name: str
+    password: str = Field(min_length=6, max_length=128)
+    name: str = Field(min_length=1, max_length=100)
 
 
 class UserResponse(BaseModel):
@@ -22,9 +22,9 @@ class UserResponse(BaseModel):
 
 
 class UserUpdateInput(BaseModel):
-    name: str | None = None
-    bio: str | None = None
-    avatar_url: str | None = None
+    name: str | None = Field(default=None, min_length=1, max_length=100)
+    bio: str | None = Field(default=None, max_length=150)
+    avatar_url: str | None = Field(default=None, max_length=500)
 
 
 class LoginInput(BaseModel):

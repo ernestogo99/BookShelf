@@ -12,13 +12,13 @@ from decimal import Decimal
 
 from sqlalchemy import text
 
-from app.database import SessionLocal
-from app.models.book import Book
-from app.models.list_ import List, ListBook
-from app.models.reading import Reading
-from app.models.review import Review
-from app.models.user import User
-from app.services.auth_service import pwd_context
+from backend.app.database import SessionLocal
+from backend.app.models.book import Book
+from backend.app.models.list_ import List, ListBook
+from backend.app.models.reading import Reading
+from backend.app.models.review import Review
+from backend.app.models.user import User
+from backend.app.services.auth_service import pwd_context
 
 # ---------------------------------------------------------------------------
 # Dados
@@ -172,21 +172,21 @@ BOOKS = [
 
 # (username, ol_key, status, rating)
 READINGS = [
-    ("ana_leitora",  "/works/OL27482W",    "read",         5),
-    ("ana_leitora",  "/works/OL45804W",    "read",         5),
-    ("ana_leitora",  "/works/OL262474W",   "read",         4),
-    ("ana_leitora",  "/works/OL25788W",    "read",         5),
-    ("ana_leitora",  "/works/OL98143W",    "reading",      None),
-    ("ana_leitora",  "/works/OL17860744W", "want_to_read", None),
-    ("carlos_pages", "/works/OL98143W",    "read",         5),
-    ("carlos_pages", "/works/OL262474W",   "read",         5),
-    ("carlos_pages", "/works/OL11975A",    "read",         4),
-    ("carlos_pages", "/works/OL5735778W",  "read",         4),
-    ("carlos_pages", "/works/OL27482W",    "want_to_read", None),
-    ("julia_books",  "/works/OL45804W",    "read",         4),
-    ("julia_books",  "/works/OL27482W",    "read",         4),
-    ("julia_books",  "/works/OL25788W",    "reading",      None),
-    ("julia_books",  "/works/OL17860744W", "read",         3),
+    ("ana_leitora", "/works/OL27482W", "read", 5),
+    ("ana_leitora", "/works/OL45804W", "read", 5),
+    ("ana_leitora", "/works/OL262474W", "read", 4),
+    ("ana_leitora", "/works/OL25788W", "read", 5),
+    ("ana_leitora", "/works/OL98143W", "reading", None),
+    ("ana_leitora", "/works/OL17860744W", "want_to_read", None),
+    ("carlos_pages", "/works/OL98143W", "read", 5),
+    ("carlos_pages", "/works/OL262474W", "read", 5),
+    ("carlos_pages", "/works/OL11975A", "read", 4),
+    ("carlos_pages", "/works/OL5735778W", "read", 4),
+    ("carlos_pages", "/works/OL27482W", "want_to_read", None),
+    ("julia_books", "/works/OL45804W", "read", 4),
+    ("julia_books", "/works/OL27482W", "read", 4),
+    ("julia_books", "/works/OL25788W", "reading", None),
+    ("julia_books", "/works/OL17860744W", "read", 3),
 ]
 
 # (username, ol_key, content, has_spoiler)
@@ -418,11 +418,7 @@ def seed(clean: bool = False) -> None:
         print("Inserindo listas...")
         for username, title, description, ol_keys in LISTS:
             user = user_map[username]
-            existing = (
-                db.query(List)
-                .filter(List.user_id == user.id, List.title == title)
-                .first()
-            )
+            existing = db.query(List).filter(List.user_id == user.id, List.title == title).first()
             if existing:
                 continue
             lst = List(user_id=user.id, title=title, description=description)

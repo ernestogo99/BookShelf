@@ -8,6 +8,8 @@ class Settings(BaseSettings):
     SECRET_KEY: str
     ACCESS_TOKEN_EXPIRE_DAYS: int = 30
     ALGORITHM: str = "HS256"
+    OPENLIBRARY_ENABLED: bool = True
+    OPENLIBRARY_TIMEOUT: float = 5.0
 
 
 settings = Settings()
