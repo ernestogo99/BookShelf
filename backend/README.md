@@ -8,9 +8,10 @@ API REST do aplicativo mobile **Movel**, um registro pessoal de leituras desenvo
 
 - [Stack](#stack)
 - [Pré-requisitos](#pré-requisitos)
-- [Rodando com Docker (recomendado)](#rodando-com-docker-recomendado)
+- [Setup rápido](#setup-rápido)
+- [Rodando com Docker](#rodando-com-docker)
 - [Rodando localmente](#rodando-localmente)
-- [Seed — dados de teste](#seed--dados-de-teste)
+- [Populando o banco](#populando-o-banco)
 - [Testes](#testes)
 - [Arquitetura do sistema](#arquitetura-do-sistema)
 - [Banco de dados](#banco-de-dados)
@@ -30,7 +31,6 @@ API REST do aplicativo mobile **Movel**, um registro pessoal de leituras desenvo
 | Autenticação | JWT via `python-jose` |
 | Hash de senha | `passlib[bcrypt]` |
 | Validação | Pydantic v2 |
-| HTTP client | `httpx` (Open Library API) |
 | Configuração | `pydantic-settings` |
 | Gerenciador de deps | `uv` |
 | Linter / Formatter | `ruff` |
@@ -40,16 +40,50 @@ API REST do aplicativo mobile **Movel**, um registro pessoal de leituras desenvo
 
 ## Pré-requisitos
 
-- [Docker](https://docs.docker.com/get-docker/) e [Docker Compose](https://docs.docker.com/compose/) — para o modo Docker
-- [uv](https://docs.astral.sh/uv/getting-started/installation/) — para o modo local
+- [Docker](https://docs.docker.com/get-docker/) e [Docker Compose](https://docs.docker.com/compose/)
+- [uv](https://docs.astral.sh/uv/getting-started/installation/) — apenas para rodar localmente
 
 ---
 
-## Rodando com Docker (recomendado)
+## Setup rápido
+
+Um único script sobe o servidor, importa o catálogo de livros e gera usuários com dados falsos para demonstração.
+
+```bash
+# Dê permissão de execução (apenas na primeira vez)
+chmod +x setup.sh
+
+# Padrão: usa books_sample.json + 15 usuários falsos
+./setup.sh
+
+# Com catálogo customizado
+./setup.sh livros.json
+
+# Com número diferente de usuários
+./setup.sh livros.json --users 30
+
+# Derruba tudo (volumes incluídos), reconstrói e repovoa
+./setup.sh --clean
+```
+
+> Na primeira execução sem `.env`, o script cria o arquivo a partir de `.env.example` e encerra. Edite `.env` definindo `SECRET_KEY` e execute novamente.
+
+O script executa automaticamente:
+1. `uv sync` — instala as dependências locais
+2. `docker compose up -d --build` — sobe banco + API
+3. Aguarda a API responder em `http://localhost:8000`
+4. `import_books.py` — importa o catálogo JSON localmente (se fornecido)
+5. `fake_data.py` — gera usuários, leituras, resenhas e listas localmente
+
+Os scripts de dados rodam **fora do container**, conectando ao banco via porta `5432` exposta pelo Docker Compose.
+
+Após concluir, acesse a documentação interativa em **http://localhost:8000/docs**.
+
+---
+
+## Rodando com Docker
 
 ### 1. Configure as variáveis de ambiente
-
-Crie um arquivo `.env` na raiz do projeto (`backend/`):
 
 ```bash
 cp .env.example .env
@@ -77,15 +111,6 @@ Isso irá:
 3. Executar `alembic upgrade head` (cria as tabelas automaticamente)
 4. Iniciar o servidor na porta `8000`
 
-### 3. Verifique
-
-```bash
-curl http://localhost:8000/
-# {"status":"ok"}
-```
-
-Documentação interativa disponível em: **http://localhost:8000/docs**
-
 ### Comandos úteis
 
 ```bash
@@ -103,10 +128,7 @@ docker compose restart api    # reinicia apenas a API
 ### 1. Configure o ambiente
 
 ```bash
-# Instale as dependências (incluindo dev)
 uv sync --all-extras
-
-# Copie e edite o .env
 cp .env.example .env
 ```
 
@@ -121,10 +143,7 @@ ACCESS_TOKEN_EXPIRE_DAYS=30
 ### 2. Crie o banco e aplique as migrações
 
 ```bash
-# Crie o banco no PostgreSQL (se ainda não existir)
 createdb bookapp
-
-# Aplique as migrações
 uv run alembic upgrade head
 ```
 
@@ -136,44 +155,125 @@ uv run uvicorn app.main:app --reload
 
 O servidor estará disponível em **http://localhost:8000**.
 
-### Linter e formatação
+---
+
+## Populando o banco
+
+### Importação de catálogo (livros reais)
+
+O script `import_books.py` importa livros a partir de um arquivo JSON exportado do **Skoob**. A importação é idempotente — pode ser executada várias vezes sem duplicar registros.
+
+**Com Docker:**
 
 ```bash
-uv run ruff check app/ --fix
-uv run ruff format app/
+docker cp seu_arquivo.json backend-api-1:/app/livros.json
+docker exec backend-api-1 python import_books.py livros.json
 ```
+
+**Localmente:**
+
+```bash
+uv run python import_books.py seu_arquivo.json
+```
+
+**Opções:**
+
+```bash
+python import_books.py livros.json --batch-size 1000  # lote maior (padrão: 500)
+```
+
+**Formato esperado** — lista JSON com objetos no formato Skoob:
+
+```json
+[
+  {
+    "book_id": 15354,
+    "title": "Curveball",
+    "year": 2008,
+    "pages": 272,
+    "publisher": "Novo Conceito",
+    "cover_filename": "https://...",
+    "detail": {
+      "author": "Bob Drogin",
+      "about": { "description": "Sinopse..." },
+      "genres": { "items": [{ "name": "Não-ficção" }] },
+      "ratings": { "average_rating": 3.8, "count_ratings": 32 }
+    }
+  }
+]
+```
+
+| Campo Skoob | Campo no banco |
+|-------------|----------------|
+| `detail.title` | `title` |
+| `detail.author` | `authors` (lista) |
+| `detail.publisher` | `publisher` |
+| `year` | `published_year` |
+| `detail.pages` | `pages` |
+| `detail.about.description` | `synopsis` |
+| `cover_filename` | `cover_url` |
+| `detail.genres.items[].name` | `genres` |
+| `detail.ratings.average_rating` | `avg_rating` |
+| `detail.ratings.count_ratings` | `total_ratings` |
+
+Os livros importados recebem `ol_key` no formato `skoob:{book_id}`.
 
 ---
 
-## Seed — dados de teste
+### Dados falsos (usuários e atividade)
 
-O script `seed.py` popula o banco com usuários, livros, leituras, resenhas e listas prontos para desenvolvimento e demonstração.
+O script `fake_data.py` gera usuários com nomes brasileiros realistas (via Faker `pt_BR`) e popula leituras, resenhas e listas a partir dos livros já existentes no banco.
+
+**Com Docker:**
 
 ```bash
-# Inserir dados (idempotente — seguro de rodar múltiplas vezes)
-uv run python seed.py
-
-# Limpar o banco e reinserir do zero
-uv run python seed.py --clean
+docker exec backend-api-1 python fake_data.py --users 15
 ```
 
-### O que é inserido
+**Localmente:**
 
-| Recurso | Qtd | Detalhes |
-|---------|-----|---------|
-| Usuários | 3 | ana, carlos, julia |
-| Livros | 8 | Duna, 1984, LOTR, Sapiens... |
-| Leituras | 15 | Status variados (`read`, `reading`, `want_to_read`) |
-| Resenhas | 11 | Conteúdo em português, algumas com spoiler |
-| Listas | 4 | Temáticas com livros ordenados |
+```bash
+uv run python fake_data.py --users 15
+```
 
-### Credenciais dos usuários de teste
+**Opções:**
 
-| E-mail | Senha |
-|--------|-------|
-| ana@example.com | senha123 |
-| carlos@example.com | senha123 |
-| julia@example.com | senha123 |
+```bash
+python fake_data.py                    # 15 usuários (padrão)
+python fake_data.py --users 50         # 50 usuários
+python fake_data.py --users 20 --clean # remove usuários falsos existentes e recria
+```
+
+Por usuário gerado:
+
+| Recurso | Quantidade |
+|---------|-----------|
+| Leituras | 8–40 livros aleatórios |
+| Resenhas | ~60% dos livros lidos |
+| Listas | 1–3 listas com 3–10 livros |
+
+A senha de todos os usuários falsos é `senha123`.
+
+---
+
+### Seed de desenvolvimento
+
+O script `seed.py` insere um conjunto fixo e pequeno de dados para desenvolvimento:
+
+```bash
+uv run python seed.py           # insere (idempotente)
+uv run python seed.py --clean   # limpa e reinsere
+```
+
+| Recurso | Qtd |
+|---------|-----|
+| Usuários | 3 (ana, carlos, julia) |
+| Livros | 8 |
+| Leituras | 15 |
+| Resenhas | 11 |
+| Listas | 4 |
+
+Credenciais: `ana@example.com`, `carlos@example.com`, `julia@example.com` — senha `senha123`.
 
 ---
 
@@ -211,10 +311,6 @@ uv run pytest tests/test_auth.py -v
 │             ┌────────────────┐                       │
 │             │  PostgreSQL 15 │                       │
 │             └────────────────┘                       │
-│                                                      │
-│  ┌──────────────────────────────────────────────┐   │
-│  │  book_service  ──▶  Open Library API (httpx) │   │
-│  └──────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────┘
 ```
 
@@ -255,7 +351,7 @@ backend/
 │   │
 │   └── services/            # Lógica de negócio — única fonte de verdade
 │       ├── auth_service.py
-│       ├── book_service.py  # Busca local + fallback Open Library
+│       ├── book_service.py  # Busca full-text + trigram no banco local
 │       ├── reading_service.py
 │       ├── review_service.py
 │       ├── list_service.py
@@ -265,12 +361,15 @@ backend/
 ├── alembic/                 # Migrações de banco
 │   └── versions/
 ├── tests/
-│   ├── conftest.py          # Fixtures: client, db, auth_client
+│   ├── conftest.py
 │   ├── test_auth.py
 │   ├── test_readings.py
 │   └── test_reviews.py
 │
-├── seed.py                  # Script de dados de teste
+├── setup.sh                 # Setup completo em um comando
+├── import_books.py          # Importa catálogo de livros (formato Skoob)
+├── fake_data.py             # Gera usuários e atividade falsos
+├── seed.py                  # Dados fixos de desenvolvimento
 ├── Dockerfile
 ├── docker-compose.yml
 ├── pyproject.toml
@@ -278,8 +377,6 @@ backend/
 ```
 
 ### Padrão de camadas
-
-Cada funcionalidade percorre o mesmo fluxo:
 
 ```
 Request HTTP
@@ -315,24 +412,24 @@ Endpoints autenticados:
     get_current_user()  →  decodifica JWT  →  db.get(User, uuid)
 ```
 
-Endpoints de leitura pública (`GET /books/search`, `GET /books/{id}`, `GET /books/{id}/reviews`) aceitam requisições sem token via `get_optional_current_user`.
+Endpoints de leitura pública (`GET /books/search`, `GET /books/{id}`, `GET /books/{id}/reviews`) aceitam requisições sem token.
 
-### Integração com Open Library
+### Busca de livros
 
 ```
 GET /books/search?q=<query>
     │
-    ├── 1. Busca local (ILIKE em title + authors)
-    ├── 2. Se >= 5 resultados → retorna do banco
-    └── 3. Se < 5 → GET openlibrary.org/search.json
-              │
-              ├── Persiste livros novos no banco
-              └── Retorna banco + recém-criados
+    ├── Full-text search: search_vector @@ plainto_tsquery('portuguese', query)
+    ├── Fallback:         title ILIKE '%query%'  (acelerado por índice GIN trigram)
+    ├── Ordenação:        similarity(title, query) + ts_rank
+    └── Dedup:            remove edições duplicadas da mesma obra
 ```
+
+O campo `search_vector` é um `tsvector` com stemming em português mantido por trigger automático — atualiza sempre que `title`, `authors` ou `synopsis` mudam.
 
 ### Cache de avaliações
 
-O campo `avg_rating` e `total_ratings` em `books` são caches atualizados de forma síncrona sempre que uma leitura com `rating` é criada, atualizada ou removida — sem necessidade de calcular na hora da consulta.
+O campo `avg_rating` e `total_ratings` em `books` são caches atualizados de forma síncrona sempre que uma leitura com `rating` é criada, atualizada ou removida.
 
 ---
 
@@ -351,10 +448,11 @@ users
 
 books
 ├── id (PK, UUID)
-├── ol_key (UNIQUE) ── chave da Open Library
+├── ol_key (UNIQUE) ── identificador da fonte (ex: "skoob:15354")
 ├── title, authors[], publisher
 ├── published_year, pages, synopsis, cover_url, genres[]
 ├── avg_rating, total_ratings ── cache calculado
+├── search_vector (TSVECTOR) ── índice full-text, mantido por trigger
 └── created_at
 
 readings
@@ -387,6 +485,18 @@ list_books
 └── added_at
 ```
 
+### Índices
+
+| Índice | Tipo | Finalidade |
+|--------|------|-----------|
+| `ix_books_search_vector` | GIN (tsvector) | Full-text search com stemming |
+| `ix_books_title_trgm` | GIN trigram | `ILIKE` rápido em títulos |
+| `ix_books_authors` | GIN array | Filtro por autor |
+| `ix_books_avg_rating` | B-tree | Ordenação em top-rated |
+| `ix_reviews_book_id` | B-tree | Reviews por livro |
+| `ix_lists_user_id` | B-tree | Listas por usuário |
+| `ix_readings_updated_at` | B-tree | Trending (últimos 7 dias) |
+
 ---
 
 ## Endpoints
@@ -410,7 +520,7 @@ list_books
 ### Livros
 | Método | Path | Auth | Descrição |
 |--------|------|------|-----------|
-| GET | `/books/search?q=` | Opcional | Busca local + Open Library |
+| GET | `/books/search?q=` | Opcional | Busca full-text no catálogo local |
 | GET | `/books/{id}` | Opcional | Detalhe com `my_reading` |
 | GET | `/books/{id}/reviews` | — | Resenhas de todos os usuários |
 

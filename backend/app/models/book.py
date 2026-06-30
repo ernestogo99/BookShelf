@@ -1,7 +1,7 @@
 import uuid
 
 from sqlalchemy import ARRAY, Integer, Numeric, String, Text, func
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import TSVECTOR, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -23,6 +23,7 @@ class Book(Base):
     avg_rating: Mapped[float] = mapped_column(Numeric(3, 2), server_default="0")
     total_ratings: Mapped[int] = mapped_column(Integer, server_default="0")
     created_at: Mapped[str] = mapped_column(server_default=func.now())
+    search_vector = mapped_column(TSVECTOR, nullable=True)
 
     readings = relationship("Reading", back_populates="book")
     reviews = relationship("Review", back_populates="book")
