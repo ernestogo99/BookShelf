@@ -4,9 +4,9 @@ from fastapi import HTTPException, status
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from backend.app.models.book import Book
-from backend.app.models.list_ import List, ListBook
-from backend.app.schemas.list_ import (
+from app.models.book import Book
+from app.models.list_ import List, ListBook
+from app.schemas.list_ import (
     AddBookInput,
     ListCreate,
     ListResponse,

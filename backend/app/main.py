@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.app.routers import users
-from backend.app.routers import auth, books, discover, lists, readings, reviews, stats
+from app.routers import users
+from app.routers import auth, books, discover, lists, readings, reviews, stats
 
 app = FastAPI(title="BookShelf API", version="1.0.0")
 

@@ -5,9 +5,9 @@ from sqlalchemy import func, select, text
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session, joinedload
 
-from backend.app.models.book import Book
-from backend.app.models.reading import Reading
-from backend.app.schemas.reading import ReadingCreate, ReadingResponse
+from app.models.book import Book
+from app.models.reading import Reading
+from app.schemas.reading import ReadingCreate, ReadingResponse
 
 
 def _update_book_rating_cache(db: Session, book_id: uuid.UUID) -> None:

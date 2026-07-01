@@ -2,8 +2,8 @@ import uuid
 
 from sqlalchemy.orm import Session
 
-from backend.app.models.user import User
-from backend.app.schemas.user import UserUpdateInput
+from app.models.user import User
+from app.schemas.user import UserUpdateInput
 
 
 def update(db: Session, user_id: uuid.UUID, data: UserUpdateInput) -> User:

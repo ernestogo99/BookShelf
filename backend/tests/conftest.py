@@ -3,9 +3,9 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
-from backend.app.config import settings
-from backend.app.database import Base, get_db
-from backend.app.main import app
+from app.config import settings
+from app.database import Base, get_db
+from app.main import app
 
 TEST_DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/bookapp_test"
 

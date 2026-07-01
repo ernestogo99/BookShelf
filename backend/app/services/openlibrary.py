@@ -9,8 +9,8 @@ import httpx
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
-from backend.app.config import settings
-from backend.app.models.book import Book
+from app.config import settings
+from app.models.book import Book
 
 _SEARCH_URL = "https://openlibrary.org/search.json"
 _FIELDS = (

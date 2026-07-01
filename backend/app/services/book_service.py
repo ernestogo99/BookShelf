@@ -5,11 +5,11 @@ from fastapi import HTTPException, status
 from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
-from backend.app.config import settings
-from backend.app.models.book import Book
-from backend.app.models.reading import Reading
-from backend.app.schemas.book import BookDetailResponse, ReadingEmbedded
-from backend.app.services import openlibrary
+from app.config import settings
+from app.models.book import Book
+from app.models.reading import Reading
+from app.schemas.book import BookDetailResponse, ReadingEmbedded
+from app.services import openlibrary
 
 # Remove sufixos entre parênteses no final do título:
 # "Duna (eBook)" → "duna"

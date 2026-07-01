@@ -2,7 +2,7 @@ import uuid
 
 from pydantic import BaseModel, field_validator
 
-from backend.app.schemas.book import BookResponse, ReadingEmbedded  # noqa: F401
+from app.schemas.book import BookResponse, ReadingEmbedded  # noqa: F401
 
 
 class ReadingCreate(BaseModel):

@@ -2,7 +2,7 @@ import uuid
 
 from pydantic import BaseModel, Field
 
-from backend.app.schemas.book import BookResponse
+from app.schemas.book import BookResponse
 
 
 class ListCreate(BaseModel):

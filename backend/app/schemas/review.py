@@ -2,7 +2,7 @@ import uuid
 
 from pydantic import BaseModel, Field
 
-from backend.app.schemas.user import UserResponse
+from app.schemas.user import UserResponse
 
 
 class ReviewCreate(BaseModel):

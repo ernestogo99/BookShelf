@@ -3,11 +3,11 @@ import uuid
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
-from backend.app.database import get_db
-from backend.app.dependencies import get_current_user
-from backend.app.models.user import User
-from backend.app.schemas.reading import ReadingCreate, ReadingResponse
-from backend.app.services import reading_service
+from app.database import get_db
+from app.dependencies import get_current_user
+from app.models.user import User
+from app.schemas.reading import ReadingCreate, ReadingResponse
+from app.services import reading_service
 
 router = APIRouter()
 

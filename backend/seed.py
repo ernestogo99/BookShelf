@@ -12,13 +12,13 @@ from decimal import Decimal
 
 from sqlalchemy import text
 
-from backend.app.database import SessionLocal
-from backend.app.models.book import Book
-from backend.app.models.list_ import List, ListBook
-from backend.app.models.reading import Reading
-from backend.app.models.review import Review
-from backend.app.models.user import User
-from backend.app.services.auth_service import pwd_context
+from app.database import SessionLocal
+from app.models.book import Book
+from app.models.list_ import List, ListBook
+from app.models.reading import Reading
+from app.models.review import Review
+from app.models.user import User
+from app.services.auth_service import pwd_context
 
 # ---------------------------------------------------------------------------
 # Dados

@@ -6,9 +6,9 @@ from sqlalchemy import cast, extract, func
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 from sqlalchemy.orm import Session, joinedload
 
-from backend.app.models.book import Book
-from backend.app.models.reading import Reading
-from backend.app.schemas.user import UserStatsResponse
+from app.models.book import Book
+from app.models.reading import Reading
+from app.schemas.user import UserStatsResponse
 
 
 def get_profile_counts(db: Session, user_id: uuid.UUID) -> dict[str, int]:

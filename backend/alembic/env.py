@@ -5,9 +5,9 @@ from sqlalchemy import pool
 
 from alembic import context
 
-from backend.app.config import settings
-from backend.app.database import Base
-import backend.app.models  # noqa: F401 — ensure all models are registered
+from app.config import settings
+from app.database import Base
+import app.models  # noqa: F401 — ensure all models are registered
 
 config = context.config
 

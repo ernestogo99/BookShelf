@@ -12,8 +12,8 @@ import sys
 
 from sqlalchemy.dialects.postgresql import insert
 
-from backend.app.database import SessionLocal
-from backend.app.models.book import Book
+from app.database import SessionLocal
+from app.models.book import Book
 
 
 def _map(item: dict) -> dict | None:

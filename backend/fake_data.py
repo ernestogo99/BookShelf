@@ -16,12 +16,12 @@ from faker import Faker
 from passlib.context import CryptContext
 from sqlalchemy.dialects.postgresql import insert
 
-from backend.app.database import SessionLocal
-from backend.app.models.book import Book
-from backend.app.models.list_ import List, ListBook
-from backend.app.models.reading import Reading
-from backend.app.models.review import Review
-from backend.app.models.user import User
+from app.database import SessionLocal
+from app.models.book import Book
+from app.models.list_ import List, ListBook
+from app.models.reading import Reading
+from app.models.review import Review
+from app.models.user import User
 
 fake = Faker("pt_BR")
 Faker.seed(42)

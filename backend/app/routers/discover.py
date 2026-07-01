@@ -4,10 +4,10 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from backend.app.database import get_db
-from backend.app.models.book import Book
-from backend.app.models.reading import Reading
-from backend.app.schemas.book import BookResponse
+from app.database import get_db
+from app.models.book import Book
+from app.models.reading import Reading
+from app.schemas.book import BookResponse
 
 router = APIRouter()
 
